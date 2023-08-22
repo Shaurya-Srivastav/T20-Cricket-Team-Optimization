@@ -1,2 +1,2 @@
 
-    player_data = read_data(filename)
+    population_size = 100

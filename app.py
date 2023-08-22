@@ -1,5 +1,6 @@
 import csv
-from pulp import LpProblem, LpVariable, LpMaximize, lpSum
+import random
+from deap import base, creator, tools, algorithms
 
 def read_data(filename):
     player_data = []
@@ -16,55 +17,70 @@ def calculate_player_score(player):
     
     return player_score * demand_score * (1 / last_bid_price)
 
-def select_players(player_data, budget):
-    selected_players = []
-    total_price_paid = 0
+def evaluate_team(individual, player_data, budget):
+    total_price = 0
+    total_score = 0
+    category_counts = {'Batsmen': 0, 'All rounders': 0, 'Wicketkeeper': 0, 'Pacers': 0, 'Spinners': 0}
     
-    target_utilization = 0.9  # Adjust this as needed
+    for i, selected in enumerate(individual):
+        if selected:
+            player = player_data[i]
+            total_price += float(player['LastBidPrice'])
+            total_score += calculate_player_score(player)
+            category_counts[player['Category']] += 1
+            
+    penalty = max(0, total_price - budget)
     
-    prob = LpProblem("PlayerSelection", LpMaximize)
+    category_penalty = 0
+    for category, count in category_counts.items():
+        diff = abs(count - CATEGORY_REQUIREMENTS[category])
+        category_penalty += diff
     
-    player_vars = LpVariable.dicts("Player", range(len(player_data)), cat="Binary")
-    budget_constraint = budget >= lpSum(player_vars[p] * float(player_data[p]['LastBidPrice']) for p in range(len(player_data)))
+    return total_score - penalty - category_penalty * 100,  # Adjusted penalty weight
+
+def select_players_genetic(player_data, budget):
+    creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+    creator.create("Individual", list, fitness=creator.FitnessMax)
     
-    batsmen_count = 2
-    all_rounder_count = 1
-    wicketkeeper_count = 1
-    pacers_count = 2
-    spinners_count = 1
+    toolbox = base.Toolbox()
     
-    prob += lpSum(player_vars[p] for p in range(len(player_data)) if player_data[p]['Category'] == 'Batsmen') == batsmen_count
-    prob += lpSum(player_vars[p] for p in range(len(player_data)) if player_data[p]['Category'] == 'All rounders') == all_rounder_count
-    prob += lpSum(player_vars[p] for p in range(len(player_data)) if player_data[p]['Category'] == 'Wicketkeeper') == wicketkeeper_count  # Corrected category name
-    prob += lpSum(player_vars[p] for p in range(len(player_data)) if player_data[p]['Category'] == 'Pacers') == pacers_count
-    prob += lpSum(player_vars[p] for p in range(len(player_data)) if player_data[p]['Category'] == 'Spinners') == spinners_count
+    # Create the individual representation (binary representation)
+    n_players = len(player_data)
+    toolbox.register("attr_bool", random.randint, 0, 1)
+    toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.attr_bool, n_players)
+    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
     
-    prob += lpSum(player_vars[p] * calculate_player_score(player_data[p]) for p in range(len(player_data)))
-    prob += budget_constraint
+    # Genetic operators
+    toolbox.register("mate", tools.cxTwoPoint)
+    toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
+    toolbox.register("select", tools.selTournament, tournsize=3)
+    toolbox.register("evaluate", evaluate_team, player_data=player_data, budget=budget)
     
-    # Set a constraint for budget utilization
-    prob += lpSum(player_vars[p] * float(player_data[p]['LastBidPrice']) for p in range(len(player_data))) <= budget * target_utilization
+    population_size = 100
+    generations = 50
     
-    prob.solve()
+    population = toolbox.population(n=population_size)
     
-    for player_index, var in player_vars.items():
-        if var.varValue == 1:
-            selected_player = player_data[player_index]
-            selected_players.append(selected_player)
-            total_price_paid += float(selected_player['LastBidPrice'])
+    algorithms.eaSimple(population, toolbox, cxpb=0.7, mutpb=0.2, ngen=generations, verbose=False)
+    
+    best_individual = tools.selBest(population, k=1)[0]
+    selected_players = [player_data[i] for i, selected in enumerate(best_individual) if selected]
+    total_price_paid = sum(float(player['LastBidPrice']) for player in selected_players)
     
     return selected_players, total_price_paid
+
+CATEGORY_REQUIREMENTS = {'Batsmen': 2, 'All rounders': 1, 'Wicketkeeper': 1, 'Pacers': 2, 'Spinners': 1}
 
 def main():
     filename = 'Data.csv'
     budget = 35.0  # Set the budget to 35
     
     player_data = read_data(filename)
-    selected_players, total_price_paid = select_players(player_data, budget)
+    selected_players, total_price_paid = select_players_genetic(player_data, budget)
     
     print("\nSelected Players:")
     for player in selected_players:
-        print(f"{player['PlayerName']} - {player['Category']} (Bid: ${float(player['LastBidPrice']):.2f})")
+        print(f"{player['PlayerName']} - {player['Category']} (Demand: {player['DemandScore']}, Bid: ${float(player['LastBidPrice']):.2f})")
     
     print(f"\nTotal Price Paid for Selected Players: ${total_price_paid:.2f}")
 
