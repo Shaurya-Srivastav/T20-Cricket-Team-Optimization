@@ -1,0 +1,31 @@
+PlayerName,Category,PlayerScore,Demand,DemandScore,LastBidPrice
+Sam Curran,All rounders,84,Very High,1.5,8
+Ben Stokes,All rounders,77,High,1.25,6
+Jimmy Neesham,All rounders,40,Low,0.5,4
+Vijay Shankar,All rounders,60,Medium,1,1
+Odean Smith,All rounders,51,Low,0.5,1
+Mayank Agarwal,Batsmen,72,High,1.25,8
+Shivam Dube,Batsmen,69,High,1.25,6
+Rinku Singh,Batsmen,65,High,1.25,4
+Will Jacks,Batsmen,48,Low,0.5,1
+Devin Conway,Batsmen,79,Very High,1.5,10
+Joe Root,Batsmen,60,Low,0.5,2
+Kane Williamson,Batsmen,72,Medium,1,5
+Anmolpreet Singh,Batsmen,45,Low,0.5,1
+Sarfaraz Khan,Batsmen,50,Low,0.5,1
+Pat Cummins,Pacers,71,High,1.5,8
+Mukesh Kumar,Pacers,62,Medium,0.75,6
+Adam Milne,Pacers,55,Low,5,4
+Chris Jordan,Pacers,58,Low,0.5,1
+Ishant Sharma,Pacers,52,Low,0.5,1
+Piyush Chawla,Spinners,68,Medium,1,4
+K Gowtham,Spinners,45,Low,0.5,2
+Mujib Ur Rehman,Spinners,70,High,1.5,8
+Noor Ahmed,Spinners,82,High,1.5,8
+Adil Rashid,Spinners,60,Medium,0.75,6
+Tabraiz Shamsi,Spinners,51,Low,0.5,1
+Mark Boucher,Wicketkeeper,84,High,1.5,8
+Adam Gilchrist,Wicketkeeper,77,Medium,0.75,6
+MS Dhoni,Wicketkeeper,80,High,1.5,10
+Kumar Sangakkara,Wicketkeeper,64,Low,0.5,2
+Ian Healy,Wicketkeeper,40,Low,0.5,2
